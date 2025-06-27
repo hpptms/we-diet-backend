@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 
 	"golang.org/x/oauth2"
 
@@ -72,17 +73,42 @@ func TikTokCallback(c *gin.Context) {
 	}
 
 	db := database.GetDB()
+	// OpenIDをintに変換（失敗時は0）
+	tiktokIDInt := 0
+	if idInt, err := strconv.Atoi(userInfo.Data.OpenID); err == nil {
+		tiktokIDInt = idInt
+	}
+
+	// Userテーブルに登録
 	var user model.User
-	result := db.Where("tik_tok_id = ?", userInfo.Data.OpenID).First(&user)
+	result := db.Where("service_name = ? AND service_id = ?", "tiktok", tiktokIDInt).First(&user)
 	if result.Error == gorm.ErrRecordNotFound {
-		// 新規ユーザー作成
 		user = model.User{
+			UserName:    userInfo.Data.Nickname,
+			Password:    "",
+			Subscribe:   false,
+			Permission:  0,
+			Picture:     userInfo.Data.Avatar,
+			ServiceName: "tiktok",
+			ServiceID:   tiktokIDInt,
+		}
+		db.Create(&user)
+	} else if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+		return
+	}
+
+	// TiktokUserテーブルに登録
+	var tUser model.TikTokUser
+	tResult := db.Where("tik_tok_id = ?", userInfo.Data.OpenID).First(&tUser)
+	if tResult.Error == gorm.ErrRecordNotFound {
+		tUser = model.TikTokUser{
 			TikTokID:     userInfo.Data.OpenID,
 			TikTokName:   userInfo.Data.Nickname,
 			TikTokAvatar: userInfo.Data.Avatar,
 		}
-		db.Create(&user)
-	} else if result.Error != nil {
+		db.Create(&tUser)
+	} else if tResult.Error != nil && tResult.Error != gorm.ErrRecordNotFound {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
 		return
 	}
@@ -92,8 +118,8 @@ func TikTokCallback(c *gin.Context) {
 		"message": "TikTok login success",
 		"user": gin.H{
 			"id":     user.ID,
-			"name":   user.TikTokName,
-			"avatar": user.TikTokAvatar,
+			"name":   user.UserName,
+			"avatar": user.Picture,
 		},
 	})
 }

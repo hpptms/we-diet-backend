@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package auth;
+
+// 認証プロバイダ種別
+enum AuthProvider {
+  GOOGLE = 0;
+  FACEBOOK = 1;
+  TIKTOK = 2;
+}
+
+// ログイン開始リクエスト
+message AuthLoginRequest {
+  AuthProvider provider = 1;
+}
+
+// ログイン開始レスポンス
+message AuthLoginResponse {
+  string auth_url = 1; // 認可画面へのURL
+}
+
+// コールバックリクエスト
+message AuthCallbackRequest {
+  AuthProvider provider = 1;
+  string code = 2;
+  string state = 3;
+}
+
+// コールバックレスポンス
+message AuthCallbackResponse {
+  string message = 1;
+  UserInfo user = 2;
+}
+
+// ユーザー情報
+message UserInfo {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string picture = 4;
+}

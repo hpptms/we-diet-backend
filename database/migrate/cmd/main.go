@@ -35,4 +35,16 @@ func main() {
 		panic("ユーザーseed投入失敗: " + err.Error())
 	}
 	fmt.Println("ユーザーseed投入完了")
+
+	// パーミッションseed投入
+	if err := seeds.PermissionSeed(db); err != nil {
+		panic("パーミッションseed投入失敗: " + err.Error())
+	}
+	fmt.Println("パーミッションseed投入完了")
+
+	// OtherService seed投入
+	if err := seeds.OtherServiceSeed(db); err != nil {
+		panic("OtherService seed投入失敗: " + err.Error())
+	}
+	fmt.Println("OtherService seed投入完了")
 }

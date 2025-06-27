@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "backend/proto";
+
+message MailRegisterRequest {
+  string email = 1;
+}
+
+message MailRegisterResponse {
+  string message = 1;
+}

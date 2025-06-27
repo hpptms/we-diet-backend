@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"strconv"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -59,18 +60,43 @@ func GoogleCallback(c *gin.Context) {
 	}
 
 	db := database.GetDB()
+	// GoogleIDをintに変換（失敗時は0）
+	googleIDInt := 0
+	if idInt, err := strconv.Atoi(userinfo.Id); err == nil {
+		googleIDInt = idInt
+	}
+
+	// Userテーブルに登録
 	var user model.User
-	result := db.Where("google_id = ?", userinfo.Id).First(&user)
+	result := db.Where("service_name = ? AND service_id = ?", "google", googleIDInt).First(&user)
 	if result.Error == gorm.ErrRecordNotFound {
-		// 新規ユーザー作成
 		user = model.User{
+			UserName:    userinfo.Name,
+			Password:    "",
+			Subscribe:   false,
+			Permission:  0,
+			Picture:     userinfo.Picture,
+			ServiceName: "google",
+			ServiceID:   googleIDInt,
+		}
+		db.Create(&user)
+	} else if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+		return
+	}
+
+	// GoogleUserテーブルに登録
+	var gUser model.GoogleUser
+	gResult := db.Where("google_id = ?", userinfo.Id).First(&gUser)
+	if gResult.Error == gorm.ErrRecordNotFound {
+		gUser = model.GoogleUser{
 			GoogleID: userinfo.Id,
 			Email:    userinfo.Email,
 			Name:     userinfo.Name,
 			Picture:  userinfo.Picture,
 		}
-		db.Create(&user)
-	} else if result.Error != nil {
+		db.Create(&gUser)
+	} else if gResult.Error != nil && gResult.Error != gorm.ErrRecordNotFound {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
 		return
 	}
@@ -80,8 +106,8 @@ func GoogleCallback(c *gin.Context) {
 		"message": "Google login success",
 		"user": gin.H{
 			"id":      user.ID,
-			"name":    user.Name,
-			"email":   user.Email,
+			"name":    user.UserName,
+			"email":   userinfo.Email,
 			"picture": user.Picture,
 		},
 	})

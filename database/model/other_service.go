@@ -1,9 +1,9 @@
 package model
 
-import "gorm.io/gorm"
-
 type OtherService struct {
-	gorm.Model
+	ID          uint   `gorm:"primaryKey"`
 	ServiceName string `gorm:"uniqueIndex"`
 	ServiceID   int    `gorm:"uniqueIndex"`
+
+	Timestamps
 }

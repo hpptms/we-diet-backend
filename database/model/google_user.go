@@ -1,11 +1,11 @@
 package model
 
-import "gorm.io/gorm"
-
 type GoogleUser struct {
-	gorm.Model
+	ID       uint   `gorm:"primaryKey"`
 	GoogleID string `gorm:"uniqueIndex"`
 	Email    string
 	Name     string
 	Picture  string
+
+	Timestamps
 }

@@ -1,8 +1,8 @@
 package model
 
-import "gorm.io/gorm"
-
 type Permission struct {
-	gorm.Model
+	ID         uint   `gorm:"primaryKey"`
 	Permission string `gorm:"uniqueIndex"`
+
+	Timestamps
 }

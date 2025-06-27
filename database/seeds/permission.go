@@ -3,14 +3,12 @@ package seeds
 import (
 	"log"
 
-	"my-gin-app/database"
 	"my-gin-app/database/migrate"
 
 	"gorm.io/gorm"
 )
 
-func SeedPermissions() {
-	db := database.GetDB()
+func PermissionSeed(db *gorm.DB) error {
 	permissions := []struct {
 		ID         int
 		Permission string
@@ -25,9 +23,11 @@ func SeedPermissions() {
 		if err == gorm.ErrRecordNotFound {
 			if err := db.Create(&migrate.Permission{Model: gorm.Model{ID: uint(perm.ID)}, Permission: perm.Permission}).Error; err != nil {
 				log.Printf("Failed to seed permission '%s': %v", perm.Permission, err)
+				return err
 			} else {
 				log.Printf("Seeded permission: %s (id=%d)", perm.Permission, perm.ID)
 			}
 		}
 	}
+	return nil
 }

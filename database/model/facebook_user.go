@@ -1,11 +1,11 @@
 package model
 
-import "gorm.io/gorm"
-
 type FacebookUser struct {
-	gorm.Model
+	ID              uint   `gorm:"primaryKey"`
 	FacebookID      string `gorm:"uniqueIndex"`
 	FacebookEmail   string
 	FacebookName    string
 	FacebookPicture string
+
+	Timestamps
 }

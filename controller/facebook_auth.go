@@ -7,6 +7,7 @@ import (
 	"my-gin-app/database/model"
 	"net/http"
 	"os"
+	"strconv"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/facebook"
@@ -71,18 +72,43 @@ func FacebookCallback(c *gin.Context) {
 	}
 
 	db := database.GetDB()
+	// FacebookIDをintに変換（失敗時は0）
+	facebookIDInt := 0
+	if idInt, err := strconv.Atoi(userInfo.ID); err == nil {
+		facebookIDInt = idInt
+	}
+
+	// Userテーブルに登録
 	var user model.User
-	result := db.Where("facebook_id = ?", userInfo.ID).First(&user)
+	result := db.Where("service_name = ? AND service_id = ?", "facebook", facebookIDInt).First(&user)
 	if result.Error == gorm.ErrRecordNotFound {
-		// 新規ユーザー作成
 		user = model.User{
+			UserName:    userInfo.Name,
+			Password:    "",
+			Subscribe:   false,
+			Permission:  0,
+			Picture:     userInfo.Picture.Data.URL,
+			ServiceName: "facebook",
+			ServiceID:   facebookIDInt,
+		}
+		db.Create(&user)
+	} else if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
+		return
+	}
+
+	// FacebookUserテーブルに登録
+	var fbUser model.FacebookUser
+	fbResult := db.Where("facebook_id = ?", userInfo.ID).First(&fbUser)
+	if fbResult.Error == gorm.ErrRecordNotFound {
+		fbUser = model.FacebookUser{
 			FacebookID:      userInfo.ID,
 			FacebookEmail:   userInfo.Email,
 			FacebookName:    userInfo.Name,
 			FacebookPicture: userInfo.Picture.Data.URL,
 		}
-		db.Create(&user)
-	} else if result.Error != nil {
+		db.Create(&fbUser)
+	} else if fbResult.Error != nil && fbResult.Error != gorm.ErrRecordNotFound {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB error"})
 		return
 	}
@@ -92,9 +118,9 @@ func FacebookCallback(c *gin.Context) {
 		"message": "Facebook login success",
 		"user": gin.H{
 			"id":      user.ID,
-			"name":    user.FacebookName,
-			"email":   user.FacebookEmail,
-			"picture": user.FacebookPicture,
+			"name":    user.UserName,
+			"email":   userInfo.Email,
+			"picture": user.Picture,
 		},
 	})
 }

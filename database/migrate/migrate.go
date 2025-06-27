@@ -7,5 +7,12 @@ import (
 )
 
 func Migrate(db *gorm.DB) error {
-	return db.AutoMigrate(&database.User{}, &Permission{})
+	return db.AutoMigrate(
+		&database.User{},
+		&database.FacebookUser{},
+		&database.GoogleUser{},
+		&database.TikTokUser{},
+		&database.Permission{},
+		&database.OtherService{},
+	)
 }

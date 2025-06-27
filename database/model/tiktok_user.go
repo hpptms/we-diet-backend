@@ -1,10 +1,10 @@
 package model
 
-import "gorm.io/gorm"
-
 type TikTokUser struct {
-	gorm.Model
+	ID           uint   `gorm:"primaryKey"`
 	TikTokID     string `gorm:"uniqueIndex"`
 	TikTokName   string
 	TikTokAvatar string
+
+	Timestamps
 }

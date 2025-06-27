@@ -3,14 +3,12 @@ package seeds
 import (
 	"log"
 
-	"my-gin-app/database"
 	"my-gin-app/database/migrate"
 
 	"gorm.io/gorm"
 )
 
-func SeedOtherServices() {
-	db := database.GetDB()
+func OtherServiceSeed(db *gorm.DB) error {
 	services := []struct {
 		Name string
 		ID   int
@@ -26,9 +24,11 @@ func SeedOtherServices() {
 		if err == gorm.ErrRecordNotFound {
 			if err := db.Create(&migrate.OtherService{ServiceName: s.Name, ServiceID: s.ID}).Error; err != nil {
 				log.Printf("Failed to seed other_service '%s': %v", s.Name, err)
+				return err
 			} else {
 				log.Printf("Seeded other_service: %s", s.Name)
 			}
 		}
 	}
+	return nil
 }
