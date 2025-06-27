@@ -5,6 +5,7 @@ import (
 	"os"
 
 	migrate "my-gin-app/database/migrate"
+	seeds "my-gin-app/database/seeds"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -28,4 +29,10 @@ func main() {
 		panic("DBマイグレーション失敗: " + err.Error())
 	}
 	fmt.Println("DBマイグレーション完了")
+
+	// ユーザーseed投入
+	if err := seeds.UserSeed(db); err != nil {
+		panic("ユーザーseed投入失敗: " + err.Error())
+	}
+	fmt.Println("ユーザーseed投入完了")
 }

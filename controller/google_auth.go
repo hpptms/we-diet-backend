@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"my-gin-app/database"
+	"my-gin-app/database/model"
 )
 
 var (
@@ -58,11 +59,11 @@ func GoogleCallback(c *gin.Context) {
 	}
 
 	db := database.GetDB()
-	var user database.User
+	var user model.User
 	result := db.Where("google_id = ?", userinfo.Id).First(&user)
 	if result.Error == gorm.ErrRecordNotFound {
 		// 新規ユーザー作成
-		user = database.User{
+		user = model.User{
 			GoogleID: userinfo.Id,
 			Email:    userinfo.Email,
 			Name:     userinfo.Name,

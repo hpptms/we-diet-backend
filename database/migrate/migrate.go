@@ -1,7 +1,7 @@
 package migrate
 
 import (
-	"my-gin-app/database"
+	database "my-gin-app/database/model"
 
 	"gorm.io/gorm"
 )

@@ -3,6 +3,8 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"my-gin-app/database"
+	"my-gin-app/database/model"
 	"net/http"
 	"os"
 
@@ -11,8 +13,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-
-	"my-gin-app/database"
 )
 
 var (
@@ -71,11 +71,11 @@ func FacebookCallback(c *gin.Context) {
 	}
 
 	db := database.GetDB()
-	var user database.User
+	var user model.User
 	result := db.Where("facebook_id = ?", userInfo.ID).First(&user)
 	if result.Error == gorm.ErrRecordNotFound {
 		// 新規ユーザー作成
-		user = database.User{
+		user = model.User{
 			FacebookID:      userInfo.ID,
 			FacebookEmail:   userInfo.Email,
 			FacebookName:    userInfo.Name,

@@ -1,0 +1,3 @@
+.env
+database/seeds/user.go
+database/seeds/permission.go

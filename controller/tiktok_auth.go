@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 
 	"my-gin-app/database"
+	"my-gin-app/database/model"
 )
 
 var (
@@ -71,11 +72,11 @@ func TikTokCallback(c *gin.Context) {
 	}
 
 	db := database.GetDB()
-	var user database.User
+	var user model.User
 	result := db.Where("tik_tok_id = ?", userInfo.Data.OpenID).First(&user)
 	if result.Error == gorm.ErrRecordNotFound {
 		// 新規ユーザー作成
-		user = database.User{
+		user = model.User{
 			TikTokID:     userInfo.Data.OpenID,
 			TikTokName:   userInfo.Data.Nickname,
 			TikTokAvatar: userInfo.Data.Avatar,

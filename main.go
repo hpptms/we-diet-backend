@@ -8,6 +8,7 @@ import (
 	"my-gin-app/controller"
 	"my-gin-app/database"
 	migrate "my-gin-app/database/migrate"
+	"my-gin-app/database/model"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,7 @@ func jwtMiddleware() (*jwt.GinJWTMiddleware, error) {
 		MaxRefresh:  time.Hour,
 		IdentityKey: identityKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(*database.User); ok {
+			if v, ok := data.(*model.User); ok {
 				return jwt.MapClaims{
 					identityKey: v.UserName,
 				}
@@ -41,7 +42,7 @@ func jwtMiddleware() (*jwt.GinJWTMiddleware, error) {
 		},
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
-			return &database.User{
+			return &model.User{
 				UserName: claims[identityKey].(string),
 			}
 		},
@@ -55,7 +56,7 @@ func jwtMiddleware() (*jwt.GinJWTMiddleware, error) {
 
 			// ここでユーザー認証ロジックを実装（例: DB照会）
 			if userID == "admin" && password == "password" {
-				return &database.User{
+				return &model.User{
 					UserName: userID,
 				}, nil
 			}
@@ -64,7 +65,7 @@ func jwtMiddleware() (*jwt.GinJWTMiddleware, error) {
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
 			// ここでパーミッション管理ロジックを実装
-			if v, ok := data.(*database.User); ok && v.UserName == "admin" {
+			if v, ok := data.(*model.User); ok && v.UserName == "admin" {
 				return true
 			}
 			return false
@@ -142,7 +143,7 @@ func main() {
 			user, _ := c.Get(identityKey)
 			c.JSON(200, gin.H{
 				"userID":   claims[identityKey],
-				"userName": user.(*database.User).UserName,
+				"userName": user.(*model.User).UserName,
 				"text":     "Hello from Gin API!",
 			})
 		})
